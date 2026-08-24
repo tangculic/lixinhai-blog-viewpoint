@@ -1,9 +1,15 @@
+import { SiteHeader } from "@/components/sites/francobollimontilessini-d2eadb58/root-8a5edab2/SiteHeader";
+import { StampGate } from "@/components/sites/francobollimontilessini-d2eadb58/root-8a5edab2/StampGate";
+import { TextureOverlay } from "@/components/sites/francobollimontilessini-d2eadb58/root-8a5edab2/TextureOverlay";
+import { CursorGlow } from "@/components/sites/francobollimontilessini-d2eadb58/root-8a5edab2/CursorGlow";
+
 export default function Home() {
   return (
-    <main className="flex min-h-screen items-center justify-center">
-      <p className="text-muted-foreground">
-        Clone target not yet built. Run <code className="font-mono text-foreground">/clone-website</code> to start.
-      </p>
+    <main className="isolate h-svh w-screen overflow-hidden">
+      <StampGate />
+      <TextureOverlay />
+      <CursorGlow />
+      <SiteHeader />
     </main>
   );
 }

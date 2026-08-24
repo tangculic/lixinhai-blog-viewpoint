@@ -10,6 +10,8 @@
   --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
   --font-heading: var(--font-sans);
+  --font-neue-montreal: var(--font-neue-montreal), ui-sans-serif, sans-serif;
+  --font-cenzo-flare: var(--font-cenzo-flare), ui-sans-serif, sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -46,6 +48,15 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* francobollimontilessini-d2eadb58 — palette lifted from the target site */
+@theme {
+  --color-dust: #f2eede;
+  --color-lawn: #51b37c;
+  --color-tomato: #df6a69;
+  --color-slate-print: #5d8bba;
+  --color-ochre: #e9b84f;
 }
 
 :root {
@@ -126,5 +137,107 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+/* francobollimontilessini-d2eadb58 / root-8a5edab2 — cover entrance animation */
+@keyframes ml-backdrop-fade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes ml-letter-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.4em);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ml-row-in {
+  from {
+    transform: translateY(var(--ml-row-from, 100%));
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes ml-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Carousel title lines. The target site sets html{font-size:72.5%}, making its rem
+   11.6px; these are that scale resolved to px so the rest of the app keeps a 16px root. */
+.ml-title {
+  font-family: var(--font-cenzo-flare), sans-serif;
+  font-size: 61.19px;
+  font-weight: 900;
+  line-height: 0.8;
+  text-transform: uppercase;
+}
+
+@media (min-width: 1024px) {
+  .ml-title {
+    font-size: 217.5px;
+  }
+}
+
+/* The footpath between two stamps. It draws on from the end the journey starts at, holds
+   a beat, then clears — so it reads as a route being walked, not a static decoration. */
+@keyframes ml-trail-draw-ltr {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes ml-trail-draw-rtl {
+  from {
+    clip-path: inset(0 0 0 100%);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes ml-trail-clear {
+  to {
+    opacity: 0;
+  }
+}
+
+.animate-ml-trail-forward {
+  animation:
+    ml-trail-draw-ltr 300ms cubic-bezier(0.33, 0, 0.2, 1) both,
+    ml-trail-clear 400ms ease-out 800ms both;
+}
+
+.animate-ml-trail-back {
+  animation:
+    ml-trail-draw-rtl 300ms cubic-bezier(0.33, 0, 0.2, 1) both,
+    ml-trail-clear 400ms ease-out 800ms both;
+}
+
+/* Reduced motion drops the draw-on, but the path still belongs on screen — it is a
+   label for where you are heading, not decoration. Show it whole, then clear it. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-ml-trail-forward,
+  .animate-ml-trail-back {
+    animation: ml-trail-clear 400ms ease-out 800ms both;
   }
 }

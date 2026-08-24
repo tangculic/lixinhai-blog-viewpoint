@@ -1,0 +1,110 @@
+"use client";
+
+import { useCallback, useRef, useState } from "react";
+
+import { cn } from "@/lib/utils";
+import { HeroCover } from "@/components/sites/francobollimontilessini-d2eadb58/root-8a5edab2/HeroCover";
+import { PosterCarousel } from "@/components/sites/francobollimontilessini-d2eadb58/root-8a5edab2/PosterCarousel";
+
+/** Total length of the shrink. Long enough to read as a camera pulling back. */
+const OPEN_MS = 1100;
+/** How much of that the canvas takes to fade up underneath the shrinking poster. */
+const CANVAS_FADE = 0.55;
+/** Matches GSAP's `power3.out` closely enough to read the same. */
+const EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
+
+type Phase = "cover" | "opening" | "canvas";
+
+const prefersReducedMotion = () =>
+  typeof window !== "undefined" &&
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/**
+ * Owns the one interaction this page is built around: the cover collapsing into the
+ * stamp canvas.
+ *
+ * Both layers are mounted from the start — the canvas has to be laid out for its centred
+ * stamp to be measurable — and the cover's poster is then flown from full bleed onto
+ * that stamp. Geometry is animated rather than transformed: the poster is `object-cover`,
+ * so shrinking its box is what makes the image re-frame instead of squashing, which is
+ * the whole character of the move.
+ */
+export function StampGate() {
+  const [phase, setPhase] = useState<Phase>("cover");
+  const posterRef = useRef<HTMLDivElement>(null);
+  const targetRef = useRef<HTMLDivElement>(null);
+
+  const open = useCallback(() => {
+    if (phase !== "cover") return;
+    const poster = posterRef.current;
+    const target = targetRef.current;
+    if (!poster || !target) {
+      setPhase("canvas");
+      return;
+    }
+
+    // Reduced motion rules out the flight, but a hard cut is harsher than it needs to
+    // be — a plain cross-fade carries the same meaning without anything travelling.
+    if (prefersReducedMotion()) {
+      setPhase("opening");
+      poster.style.transition = "opacity 400ms ease-out";
+      poster.style.opacity = "0";
+      window.setTimeout(() => setPhase("canvas"), 420);
+      return;
+    }
+
+    const from = poster.getBoundingClientRect();
+    const to = target.getBoundingClientRect();
+    if (!to.width || !to.height) {
+      setPhase("canvas");
+      return;
+    }
+    setPhase("opening");
+
+    // Pin the poster in viewport space so it can be animated free of the cover's layout.
+    Object.assign(poster.style, {
+      position: "fixed",
+      left: `${from.left}px`,
+      top: `${from.top}px`,
+      width: `${from.width}px`,
+      height: `${from.height}px`,
+      zIndex: "30",
+      willChange: "top, left, width, height",
+    });
+
+    const flight = poster.animate(
+      [
+        { left: `${from.left}px`, top: `${from.top}px`, width: `${from.width}px`, height: `${from.height}px` },
+        { left: `${to.left}px`, top: `${to.top}px`, width: `${to.width}px`, height: `${to.height}px` },
+      ],
+      { duration: OPEN_MS, easing: EASE, fill: "forwards" },
+    );
+
+    flight.finished
+      .catch(() => undefined)
+      .finally(() => {
+        setPhase("canvas");
+      });
+  }, [phase]);
+
+  const opening = phase === "opening";
+  const showCover = phase !== "canvas";
+
+  return (
+    <>
+      <PosterCarousel
+        interactive={phase === "canvas"}
+        centerImageRef={targetRef}
+        // Until the flying poster has landed, the stamp underneath shows only its frame
+        // and lettering — the photo arriving is the cover finishing its trip.
+        centerImageHidden={showCover}
+        className={cn("z-0 ease-out", phase === "cover" && "opacity-0")}
+        style={{ transition: `opacity ${Math.round(OPEN_MS * CANVAS_FADE)}ms ease-out` }}
+      />
+
+      {showCover ? (
+        <HeroCover posterRef={posterRef} onOpen={open} exiting={opening} />
+      ) : null}
+    </>
+  );
+}
