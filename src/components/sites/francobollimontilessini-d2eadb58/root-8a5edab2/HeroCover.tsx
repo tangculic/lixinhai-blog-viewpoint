@@ -189,6 +189,9 @@ export function HeroCover({ posterRef, onOpen, exiting = false }: HeroCoverProps
           onClick={onOpen}
           disabled={exiting}
           aria-label="Open the stamp collection"
+          // Marks this as the target the pre-hydration tap listener in `layout.tsx`
+          // watches for, so a tap that lands before React does is not lost.
+          data-ml-open=""
           className="absolute inset-0 z-20 cursor-pointer focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-dust"
         />
       ) : null}

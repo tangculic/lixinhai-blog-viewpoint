@@ -13,6 +13,14 @@ interface PosterPlateProps {
   /** Tint for the printed caption. */
   captionClass?: string;
   objectPosition?: string;
+  /**
+   * Fetch immediately instead of waiting to come into view.
+   *
+   * For the slides just off the right edge of the strip. Lazy loading measures against
+   * the viewport, and a slide one drag away is outside it, so the fetch only starts once
+   * the swipe has already happened — which is exactly the wait it is supposed to avoid.
+   */
+  eager?: boolean;
   className?: string;
 }
 
@@ -30,6 +38,7 @@ export function PosterPlate({
   lettering = false,
   captionClass,
   objectPosition,
+  eager = false,
   className,
 }: PosterPlateProps) {
   return (
@@ -42,6 +51,7 @@ export function PosterPlate({
           alt={alt}
           fill
           sizes="(min-width: 1024px) 340px, 55vw"
+          loading={eager ? "eager" : "lazy"}
           className="object-cover"
           style={{ objectPosition }}
           // Native image dragging would hijack the strip's own drag on the first move.

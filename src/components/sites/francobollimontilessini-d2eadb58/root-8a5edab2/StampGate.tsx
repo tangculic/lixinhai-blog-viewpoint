@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { HeroCover } from "@/components/sites/francobollimontilessini-d2eadb58/root-8a5edab2/HeroCover";
@@ -15,6 +15,13 @@ const CANVAS_FADE = 0.55;
 const EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
 
 type Phase = "cover" | "opening" | "canvas";
+
+declare global {
+  interface Window {
+    /** Set by the inline listener in `layout.tsx` when the cover is tapped pre-hydration. */
+    __mlPendingOpen?: 0 | 1;
+  }
+}
 
 const prefersReducedMotion = () =>
   typeof window !== "undefined" &&
@@ -102,6 +109,19 @@ export function StampGate({ onOpenPoster }: StampGateProps) {
     flight.finished.catch(() => undefined).finally(land);
     window.setTimeout(land, OPEN_MS + 300);
   }, [phase]);
+
+  // A tap that landed on the cover before this component existed. The inline listener in
+  // `layout.tsx` catches it; honouring it here is what turns "the first tap did nothing"
+  // into the page opening the moment it is able to.
+  useEffect(() => {
+    if (!window.__mlPendingOpen) return;
+    window.__mlPendingOpen = 0;
+    // Next frame rather than straight away: the reel behind the cover has to have been
+    // laid out for the stamp to have a box worth measuring, and without one `open()`
+    // gives up on the flight and cuts.
+    const handle = requestAnimationFrame(() => open());
+    return () => cancelAnimationFrame(handle);
+  }, [open]);
 
   const opening = phase === "opening";
   const showCover = phase !== "canvas";

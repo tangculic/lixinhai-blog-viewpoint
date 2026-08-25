@@ -12,6 +12,7 @@ import {
   POSTERS,
   galleryFor,
   nextPoster,
+  posterHero,
   posterImage,
   posterSrc,
   type Poster,
@@ -249,7 +250,10 @@ export function PosterDetail({ poster, from, onClose, onNavigate }: PosterDetail
           }
         >
           <Image
-            src={posterSrc(poster)}
+            // The hero copy where the poster has one. Same artwork and same crop as the
+            // stamp this flew out of, so swapping in the larger file changes nothing about
+            // where the flight lands.
+            src={posterHero(poster)}
             alt={label}
             fill
             priority
@@ -315,10 +319,15 @@ export function PosterDetail({ poster, from, onClose, onNavigate }: PosterDetail
 
       {/* ---- the gallery ---- */}
       <section aria-label={`${label} photographs`} className="pt-12 md:pt-16">
-        <div className="mb-12 flex flex-wrap items-center justify-center gap-4 px-6 md:mb-16">
-          <GalleryLink href={poster.links?.ctrip}>携程</GalleryLink>
-          <GalleryLink href={poster.links?.map}>地图</GalleryLink>
-        </div>
+        {/* The two outward links belong to a place you might go and look up. The map page
+            is the collection's own index — it is about all of them at once, has no single
+            listing or pin to point at, and drew both buttons dimmed and inert. */}
+        {poster.panel !== "map" ? (
+          <div className="mb-12 flex flex-wrap items-center justify-center gap-4 px-6 md:mb-16">
+            <GalleryLink href={poster.links?.ctrip}>携程</GalleryLink>
+            <GalleryLink href={poster.links?.map}>地图</GalleryLink>
+          </div>
+        ) : null}
 
         {poster.panel === "map" ? (
           <PenangMap onOpenPoster={openBySlug} />
@@ -339,6 +348,10 @@ export function PosterDetail({ poster, from, onClose, onNavigate }: PosterDetail
                 <PosterPlate
                   src={posterImage(basename)}
                   alt={i === 0 ? label : `${label} — ${i + 1}`}
+                  // The first three. Slide 0 is the poster artwork, already in cache from
+                  // the hero above it; 1 and 2 are the two the first drags land on, and
+                  // waiting until they are in view is what made a swipe feel slow.
+                  eager={i < 3}
                   lettering={i === 0 && poster.lettering !== false}
                   captionClass={poster.caption === "slate" ? "text-slate-print" : "text-dust"}
                   objectPosition={i === 0 ? poster.focus : undefined}

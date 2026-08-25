@@ -12,8 +12,22 @@ import { assetPath } from "@/lib/asset-path";
  */
 export interface Poster {
   slug: string;
-  /** Basename under `public/sites/.../posters/`. */
+  /**
+   * Basename under `public/sites/.../posters/`. The stamp: on the reel it is never wider
+   * than a 340px slot, so ~800px of source covers a 2-3x phone and there is no reason for
+   * it to be larger — five of these load on the index at once.
+   */
   image: string;
+  /**
+   * A higher-resolution copy of the same artwork, same crop, for the opened page's
+   * full-bleed hero. Optional; without one the hero falls back to `image`.
+   *
+   * The two uses are far apart in size — a stamp is a few hundred pixels wide, the hero is
+   * the whole screen, which is ~1200px on a 3x phone — and one file cannot serve both:
+   * sized for the hero it makes the index pay four times over for detail no stamp can
+   * show, and sized for the stamp it arrives on the hero visibly soft.
+   */
+  hero?: string;
   words: readonly [string, string];
   place: string;
   coords: string;
@@ -214,6 +228,7 @@ export const POSTERS: readonly Poster[] = [
     story:
       "这是一家隐匿于热带雨林与百年雨树之间的奢华五星级度假村。酒店融合了传统建筑风格，并紧邻宁静的峇都丁宜海滩。\n\n在这里，你可以享受顶级的设施与卓越的服务。无论是家庭度假还是浪漫之旅，这里都是一处静谧的海滨天堂。",
     image: "sayang-hotel-v2",
+    hero: "sayang-hotel-hero",
     words: ["Sayang", "Hotel"],
     place: "Shangri-La Rasa Sayang, Batu Ferringhi",
     coords: "N 5° 28' 33\" - E 100° 14' 40\"",
@@ -336,6 +351,12 @@ export const POSTER_BASE = "/sites/francobollimontilessini-d2eadb58/root-8a5edab
 export const posterImage = (basename: string) => assetPath(`${POSTER_BASE}/${basename}.jpg`);
 
 export const posterSrc = (poster: Poster) => posterImage(poster.image);
+
+/**
+ * The artwork for the opened page's full-bleed hero — the high-resolution copy where one
+ * has been supplied, and the stamp's own file where it has not.
+ */
+export const posterHero = (poster: Poster) => posterImage(poster.hero ?? poster.image);
 
 /** Every slide on a poster's opened page: its own artwork, then any extra photographs. */
 export const galleryFor = (poster: Poster) => [poster.image, ...(poster.gallery ?? [])];
