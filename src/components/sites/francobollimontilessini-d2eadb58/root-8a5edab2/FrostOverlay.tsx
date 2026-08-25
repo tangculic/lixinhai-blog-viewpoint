@@ -14,12 +14,18 @@ const GRAIN = assetPath("/sites/francobollimontilessini-d2eadb58/shared/paper-gr
  *
  * Over the grain sit two gradients: a cool wash that falls from the top, and a soft edge
  * shade. They are what carries the frosted, lit-from-above feel; the grain alone is flat.
+ *
+ * The wash is deliberately restrained. This sheet is `fixed`, so its bright end is not a
+ * highlight on one part of the page — it parks at the top of the *screen* and stays there
+ * through every scroll, which is what read as a permanent haze over the whole site. The
+ * top stop is now well under half its old strength, the mid-tones are all but gone, and
+ * the shade below and around it carries more of the lighting instead.
  */
 export function FrostOverlay() {
   return (
     <aside aria-hidden className="pointer-events-none fixed inset-0 z-[70]">
       <div
-        className="absolute inset-0 opacity-[0.2] mix-blend-overlay"
+        className="absolute inset-0 opacity-[0.14] mix-blend-overlay"
         style={{ backgroundImage: `url(${GRAIN})`, backgroundSize: "320px 320px" }}
       />
 
@@ -27,15 +33,15 @@ export function FrostOverlay() {
         className="absolute inset-0 mix-blend-soft-light"
         style={{
           background:
-            "linear-gradient(180deg, rgba(255,255,255,0.38) 0%, rgba(255,255,255,0.14) 40%, rgba(255,255,255,0.03) 62%, rgba(22,30,48,0.16) 100%)",
+            "linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0) 62%, rgba(22,30,48,0.2) 100%)",
         }}
       />
 
       <div
-        className="absolute inset-0 opacity-[0.18] mix-blend-multiply"
+        className="absolute inset-0 opacity-[0.22] mix-blend-multiply"
         style={{
           background:
-            "radial-gradient(130% 105% at 50% 45%, rgba(255,255,255,0) 58%, rgba(96,104,120,0.5) 100%)",
+            "radial-gradient(130% 105% at 50% 45%, rgba(255,255,255,0) 52%, rgba(96,104,120,0.55) 100%)",
         }}
       />
     </aside>

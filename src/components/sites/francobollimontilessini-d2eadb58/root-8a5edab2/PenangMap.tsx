@@ -69,23 +69,42 @@ export function PenangMap({ onOpenPoster }: { onOpenPoster?: (slug: string) => v
       map.fitBounds(bounds);
       mapRef.current = map;
 
-      // Amap rather than OpenStreetMap: openstreetmap.org's tile servers are unreliable
-      // from mainland China, which is where most of this page's readers are, and a map
-      // that renders as blank grey squares is worse than no map.
+      // Carto rather than Amap. Amap answers 200 for tiles anywhere on earth, but outside
+      // mainland China every one of them is the same 179-byte fully transparent PNG — it
+      // simply has no data for Malaysia. That is why this panel drew pins, zoom buttons
+      // and an attribution line over an empty sheet: the tiles were arriving, and they
+      // were blank. Checked directly: Penang and KL return 179 bytes at every zoom, the
+      // same request over Beijing returns ~12KB of real map.
       //
-      // Amap normally serves GCJ-02, which would put every pin ~130m off if it were fed
-      // WGS-84 — but that shift is only applied inside China. Checked against a precisely
-      // known landmark (Petronas, WGS-84 3.15785/101.71167): Amap's own coordinate for it
-      // is 3.157987/101.711832, ~20m away, far below the shift. So Amap is serving plain
-      // WGS-84 here and the coordinates below need no conversion.
-      L.tileLayer(
-        "https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}",
+      // Carto's basemaps are global, sit on Fastly (reachable from the mainland, where
+      // most of this page's readers are, unlike openstreetmap.org's own servers), and
+      // Voyager's warm paper-and-water palette sits closer to this collection's flat
+      // colour than the near-white Positron sheet would.
+      //
+      // Carto serves plain WGS-84 — no GCJ-02 shift to undo — so the coordinates in
+      // `penang-places` are used exactly as written.
+      const carto = L.tileLayer(
+        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
         {
-          subdomains: "1234",
-          attribution: "&copy; 高德地图 AutoNavi",
-          maxZoom: 18,
+          subdomains: "abcd",
+          attribution: "&copy; OpenStreetMap &copy; CARTO",
+          maxZoom: 20,
         },
       ).addTo(map);
+
+      // If Carto turns out to be unreachable after all, fall back rather than leave the
+      // same blank sheet behind. A handful of failures is normal on a flaky connection —
+      // it takes a sustained run of them, across the whole visible screenful, to switch.
+      let failures = 0;
+      carto.on("tileerror", () => {
+        if (++failures < 12 || !map) return;
+        carto.off("tileerror");
+        map.removeLayer(carto);
+        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "&copy; OpenStreetMap",
+          maxZoom: 19,
+        }).addTo(map);
+      });
 
       for (const place of PENANG_PLACES) {
         const icon = L.divIcon({
@@ -152,7 +171,9 @@ export function PenangMap({ onOpenPoster }: { onOpenPoster?: (slug: string) => v
       border-radius:9999px; box-shadow:0 2px 8px rgba(0,0,0,.28); }
     .ml-pin[data-picked="true"] .ml-pin-dot { background:#F9CD6C; transform:scale(1.25); }
     .ml-pin[data-picked="true"] .ml-pin-label { background:#F9CD6C; }
-    .leaflet-container { background:#dfe6ea; font-family:var(--font-neue-montreal),sans-serif; }
+    /* The ground behind a tile that has not arrived yet — Voyager's own water tone, so
+       the gap during loading reads as sea rather than as a hole. */
+    .leaflet-container { background:#cfe0e4; font-family:var(--font-neue-montreal),sans-serif; }
   `;
 
   // Leaflet owns the pin nodes, so the picked state is written onto them directly.

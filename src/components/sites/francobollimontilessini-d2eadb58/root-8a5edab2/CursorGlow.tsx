@@ -5,6 +5,10 @@ import { useEffect, useRef } from "react";
 /**
  * Soft radial glow that follows the cursor on fine-pointer (mouse) devices only.
  * Hidden until the first pointer move; screen-blended so it lightens what's beneath it.
+ *
+ * Kept faint. Screen blending over an already-light ground clips to white quickly, and a
+ * glow that sits under the cursor is exactly where the reader is looking — it was the
+ * desktop half of the same haze the frost sheet caused everywhere else.
  */
 export function CursorGlow() {
   const ref = useRef<HTMLDivElement>(null);
@@ -33,7 +37,7 @@ export function CursorGlow() {
         width: 480,
         height: 480,
         background:
-          "radial-gradient(circle, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 70%)",
+          "radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%)",
         transitionProperty: "opacity, transform",
         transitionDuration: "150ms, 80ms",
       }}

@@ -85,14 +85,20 @@ export function HeroCover({ posterRef, onOpen, exiting = false }: HeroCoverProps
             Below `lg`, the eyebrow row and subtitle are pinned to the heading by the same
             offsets as desktop, but mobile's smaller icon and type leave far less pixel
             room to absorb them — the rows end up reading into the icon and into each
-            other. `mb-9`/`-top-6`/`-bottom-11` (all `lg:`-restored below) just give the
-            mobile stack more air; desktop is untouched. */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center md:pb-40 text-center px-4">
-          <MountainPeaksIcon className="w-[140px] h-[46px] lg:w-[223px] lg:h-[74px] max-lg:h-12 text-dust mb-9 lg:mb-2" />
+            other. `mb-11`/`-top-8`/`-bottom-14` (all `lg:`-restored below) just give the
+            mobile stack more air; desktop is untouched.
+
+            The mobile `pb` rides on that same `justify-center`: padding shrinks the box
+            the stack is centred in, so the whole title lifts by half of it. It is in `vh`
+            rather than a fixed step because what it is clearing is a share of the screen
+            — the poster's horizon, which sits at a fixed fraction of the artwork — and a
+            pixel value would land differently on a short phone than on a tall one. */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center pb-[12vh] md:pb-40 text-center px-4">
+          <MountainPeaksIcon className="w-[140px] h-[46px] lg:w-[223px] lg:h-[74px] max-lg:h-12 text-dust mb-11 lg:mb-2" />
 
           <div className="relative w-full max-w-3xl">
             {/* Eyebrow row */}
-            <div className="absolute left-0 right-0 -top-6 lg:-top-16 flex justify-between overflow-hidden px-4 lg:px-2">
+            <div className="absolute left-0 right-0 -top-8 lg:-top-16 flex justify-between overflow-hidden px-4 lg:px-2">
               <div
                 className="font-neue-montreal font-bold text-[13px] lg:text-[23.2px] uppercase text-dust"
                 style={
@@ -119,8 +125,12 @@ export function HeroCover({ posterRef, onOpen, exiting = false }: HeroCoverProps
 
             {/* Heading */}
             {/* "TOGETHER" is a letter longer than the source's widest line, so the type
-                scale steps down a notch to keep both lines inside the viewport. */}
-            <h1 className="font-cenzo-flare font-black uppercase leading-[0.8] tracking-wider text-center text-[15vw] lg:text-[11.5vw] text-dust">
+                scale steps down a notch to keep both lines inside the viewport.
+                Leading opens up below `lg`. 0.8 is set for the desktop line, where the
+                type is large enough that two lines nearly touching still read as one
+                block; at phone size the same ratio closes the gap to a few pixels and
+                the two words start to read as one solid slab. */}
+            <h1 className="font-cenzo-flare font-black uppercase leading-[0.92] lg:leading-[0.8] tracking-wider text-center text-[15vw] lg:text-[11.5vw] text-dust">
               {HEADING_LETTERS.map((letters, lineIndex) => (
                 <div key={HEADING_LINES[lineIndex]} className="whitespace-nowrap flex justify-center">
                   {letters.map((char, i) => {
@@ -143,7 +153,7 @@ export function HeroCover({ posterRef, onOpen, exiting = false }: HeroCoverProps
 
             {/* Subtitle row — letters spread edge-to-edge, matching the site's tracked-out look */}
             <div
-              className="absolute left-0 right-0 -bottom-11 lg:-bottom-16 flex justify-between overflow-hidden px-4 lg:px-2"
+              className="absolute left-0 right-0 -bottom-14 lg:-bottom-16 flex justify-between overflow-hidden px-4 lg:px-2"
               style={
                 {
                   "--ml-row-from": "100%",
