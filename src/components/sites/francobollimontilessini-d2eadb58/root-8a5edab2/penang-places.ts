@@ -1,12 +1,17 @@
 /**
  * The places the Penang map pins.
  *
- * Coordinates are approximate — good to a block or so, which is enough to put a pin on the
- * right building at street zoom, but they have not been surveyed. Check any you intend to
- * navigate by.
+ * The five with a `slug` carry Amap's own POI coordinates, read out of the share links on
+ * their poster pages, so they land exactly where Amap's tiles draw them. The George Town
+ * landmarks below them are still eyeballed — good to a block or so, enough to put a pin on
+ * the right street, but not surveyed.
  *
- * Most of these sit inside George Town's old quarter and are only a few hundred metres
- * apart, so they separate out as you zoom in rather than at first sight.
+ * These are plain WGS-84. Amap serves GCJ-02 inside China, which would throw every pin
+ * ~130m off, but that shift stops at the border; see the note in `PenangMap.tsx` for the
+ * check against a known landmark.
+ *
+ * Most of the unslugged ones sit inside George Town's old quarter and are only a few
+ * hundred metres apart, so they separate out as you zoom in rather than at first sight.
  */
 export interface Place {
   id: string;
@@ -25,32 +30,32 @@ export const PENANG_PLACES: readonly Place[] = [
     id: "penang-hill",
     name: "升旗山",
     english: "Penang Hill",
-    lat: 5.4239,
-    lng: 100.2686,
+    lat: 5.4085,
+    lng: 100.2772,
     slug: "penang-hill",
   },
   {
     id: "usm",
     name: "USM 理科大学",
     english: "Universiti Sains Malaysia",
-    lat: 5.356,
-    lng: 100.302,
+    lat: 5.3556,
+    lng: 100.3025,
     slug: "usm-campus",
   },
   {
     id: "batu-ferringhi",
     name: "峇都丁宜沙滩",
     english: "Batu Ferringhi Beach",
-    lat: 5.472,
-    lng: 100.25,
+    lat: 5.4784,
+    lng: 100.2518,
     slug: "batu-ferringhi",
   },
   {
     id: "design-village",
     name: "槟城奥特莱斯",
     english: "Design Village Outlet Mall",
-    lat: 5.273,
-    lng: 100.436,
+    lat: 5.2439,
+    lng: 100.4368,
     slug: "penang-outlets",
   },
   {

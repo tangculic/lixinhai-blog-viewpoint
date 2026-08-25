@@ -204,7 +204,7 @@ export const POSTERS: readonly Poster[] = [
       "george-town-gallery-8",
     ],
     links: {
-      map: "https://surl.amap.com/hnZxqjk1c2mJ",
+      map: "https://surl.amap.com/kjB5Y5g38JZ",
       ctrip:
         "https://m.ctrip.com/webapp/you/gspoi/sight/57611/0.html?poiId=23895639&seo=0&isHideNavBar=YES&poiType=3&allianceid=3813947&sharecid=32001158890377458623&sid=21516932&sharecid=32001158890377458623&scene=sightStore&s_guid=c95d623c-e1c4-4d2d-bc9a-5cedc646ea10",
     },

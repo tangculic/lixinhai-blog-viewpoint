@@ -69,10 +69,23 @@ export function PenangMap({ onOpenPoster }: { onOpenPoster?: (slug: string) => v
       map.fitBounds(bounds);
       mapRef.current = map;
 
-      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "&copy; OpenStreetMap",
-        maxZoom: 19,
-      }).addTo(map);
+      // Amap rather than OpenStreetMap: openstreetmap.org's tile servers are unreliable
+      // from mainland China, which is where most of this page's readers are, and a map
+      // that renders as blank grey squares is worse than no map.
+      //
+      // Amap normally serves GCJ-02, which would put every pin ~130m off if it were fed
+      // WGS-84 — but that shift is only applied inside China. Checked against a precisely
+      // known landmark (Petronas, WGS-84 3.15785/101.71167): Amap's own coordinate for it
+      // is 3.157987/101.711832, ~20m away, far below the shift. So Amap is serving plain
+      // WGS-84 here and the coordinates below need no conversion.
+      L.tileLayer(
+        "https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}",
+        {
+          subdomains: "1234",
+          attribution: "&copy; 高德地图 AutoNavi",
+          maxZoom: 18,
+        },
+      ).addTo(map);
 
       for (const place of PENANG_PLACES) {
         const icon = L.divIcon({

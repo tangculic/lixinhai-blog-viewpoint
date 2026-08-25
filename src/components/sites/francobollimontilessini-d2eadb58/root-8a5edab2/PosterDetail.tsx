@@ -327,8 +327,13 @@ export function PosterDetail({ poster, from, onClose, onNavigate }: PosterDetail
              neighbouring perforations interlock.
              The card is sized well under the viewport on purpose: on a narrow phone a
              card that filled the screen would leave nothing on screen to hint that the
-             strip drags sideways at all. */
-          <GalleryStrip className="gap-[clamp(76px,19vw,112px)] px-[clamp(1.5rem,7vw,5rem)] pb-4">
+             strip drags sideways at all.
+             `pt` clears that same 12% overhang at the *top* of each card. Setting
+             `overflow-x-auto` and leaving `overflow-y` alone doesn't leave it visible —
+             the CSS spec computes an unset `overflow-y` to `auto` as soon as its partner
+             axis scrolls, so the strip clips vertically too, and with no top padding that
+             clip line lands right through the die-cut border. */
+          <GalleryStrip className="gap-[clamp(76px,19vw,112px)] px-[clamp(1.5rem,7vw,5rem)] pt-[clamp(36px,9vw,58px)] pb-4">
             {slides.map((basename, i) => (
               <div key={`${basename}-${i}`} className="w-[min(55vw,340px)] shrink-0">
                 <PosterPlate

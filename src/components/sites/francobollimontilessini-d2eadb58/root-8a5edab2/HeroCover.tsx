@@ -81,13 +81,18 @@ export function HeroCover({ posterRef, onOpen, exiting = false }: HeroCoverProps
           exiting && "pointer-events-none opacity-0",
         )}
       >
-        {/* Title block */}
+        {/* Title block
+            Below `lg`, the eyebrow row and subtitle are pinned to the heading by the same
+            offsets as desktop, but mobile's smaller icon and type leave far less pixel
+            room to absorb them — the rows end up reading into the icon and into each
+            other. `mb-9`/`-top-6`/`-bottom-11` (all `lg:`-restored below) just give the
+            mobile stack more air; desktop is untouched. */}
         <div className="absolute inset-0 flex flex-col items-center justify-center md:pb-40 text-center px-4">
-          <MountainPeaksIcon className="w-[140px] h-[46px] lg:w-[223px] lg:h-[74px] max-lg:h-12 text-dust mb-2" />
+          <MountainPeaksIcon className="w-[140px] h-[46px] lg:w-[223px] lg:h-[74px] max-lg:h-12 text-dust mb-9 lg:mb-2" />
 
           <div className="relative w-full max-w-3xl">
             {/* Eyebrow row */}
-            <div className="absolute left-0 right-0 -top-10 lg:-top-16 flex justify-between overflow-hidden px-2">
+            <div className="absolute left-0 right-0 -top-6 lg:-top-16 flex justify-between overflow-hidden px-4 lg:px-2">
               <div
                 className="font-neue-montreal font-bold text-[13px] lg:text-[23.2px] uppercase text-dust"
                 style={
@@ -138,7 +143,7 @@ export function HeroCover({ posterRef, onOpen, exiting = false }: HeroCoverProps
 
             {/* Subtitle row — letters spread edge-to-edge, matching the site's tracked-out look */}
             <div
-              className="absolute left-0 right-0 -bottom-8 lg:-bottom-16 flex justify-between overflow-hidden px-2"
+              className="absolute left-0 right-0 -bottom-11 lg:-bottom-16 flex justify-between overflow-hidden px-4 lg:px-2"
               style={
                 {
                   "--ml-row-from": "100%",
