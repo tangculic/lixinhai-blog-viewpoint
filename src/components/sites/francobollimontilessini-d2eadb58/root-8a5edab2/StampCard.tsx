@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, type MouseEvent, type PointerEvent } from "react";
+import { useRef, type KeyboardEvent, type PointerEvent } from "react";
 
 import { cn } from "@/lib/utils";
 import { StampFrame } from "@/components/sites/francobollimontilessini-d2eadb58/root-8a5edab2/stamp/StampFrame";
@@ -14,8 +14,11 @@ import {
 
 /** How far the card leans into the pointer, in degrees. */
 const TILT = 6;
-/** Pointer travel, in px, past which a press counts as a drag rather than a click. */
-const DRAG_SLOP = 6;
+/**
+ * Pointer travel, in px, past which a press counts as a drag rather than a tap. Loose
+ * enough to survive the hand wobble of a real mouse click.
+ */
+const DRAG_SLOP = 10;
 
 interface StampCardProps {
   poster: Poster;
@@ -23,12 +26,18 @@ interface StampCardProps {
   active?: boolean;
   priority?: boolean;
   /**
-   * Set on the poster image's clipping box. The opening transition measures this to
-   * work out where the full-bleed cover has to land.
+   * Called with the poster image's clipping box. The opening transition measures this to
+   * work out where the full-bleed cover has to land. A callback rather than a ref object,
+   * because the card keeps its own handle on that node and only forwards it.
    */
-  imageRef?: React.Ref<HTMLDivElement>;
+  imageRef?: React.RefCallback<HTMLDivElement | null>;
   /** Hides just the photo, leaving frame and lettering — used while the cover flies in. */
   imageHidden?: boolean;
+  /**
+   * Makes the card openable. Receives the photo's current viewport box, which the detail
+   * view flies out from — the stamp appears to unfold into the full poster.
+   */
+  onOpen?: (from: DOMRect) => void;
   className?: string;
 }
 
@@ -42,9 +51,18 @@ export function StampCard({
   priority = false,
   imageRef,
   imageHidden = false,
+  onOpen,
   className,
 }: StampCardProps) {
   const tiltRef = useRef<HTMLDivElement>(null);
+
+  // The photo's box is both the opening transition's landing target and the detail
+  // view's launch point, so it is tracked here as well as handed upwards.
+  const imageBox = useRef<HTMLDivElement | null>(null);
+  const attachImageBox = (node: HTMLDivElement | null) => {
+    imageBox.current = node;
+    imageRef?.(node);
+  };
 
   const handleMove = (event: PointerEvent<HTMLElement>) => {
     const node = tiltRef.current;
@@ -63,18 +81,33 @@ export function StampCard({
     node.style.setProperty("--y-rotation", "0deg");
   };
 
-  // The card sits inside the drag surface, so a gesture that happens to start and end on
-  // it would otherwise read as a click. Anything past a few pixels was a drag, not a tap.
+  const openPoster = () => {
+    const box = imageBox.current?.getBoundingClientRect();
+    if (box) onOpen?.(box);
+  };
+
+  // The card sits inside a drag surface, so a gesture that happens to start and end on it
+  // would otherwise read as a tap. Anything past a few pixels was a drag.
+  //
+  // This runs off `pointerup` rather than `click` on purpose. The surface underneath takes
+  // pointer capture as soon as a drag might be starting, and a captured pointer retargets
+  // the click that follows at the capturing element — so the button cannot rely on ever
+  // seeing one. Keyboard activation is handled separately, below.
   const press = useRef<{ x: number; y: number } | null>(null);
   const markPress = (event: PointerEvent<HTMLElement>) => {
     press.current = { x: event.clientX, y: event.clientY };
   };
-  const cancelIfDragged = (event: MouseEvent<HTMLElement>) => {
+  const openIfTapped = (event: PointerEvent<HTMLElement>) => {
     const start = press.current;
     press.current = null;
-    if (start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > DRAG_SLOP) {
-      event.preventDefault();
-    }
+    if (!start) return;
+    if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > DRAG_SLOP) return;
+    openPoster();
+  };
+  const openOnKey = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    openPoster();
   };
 
   return (
@@ -90,7 +123,7 @@ export function StampCard({
         <StampShadow className="absolute z-0 top-4 left-8 w-[110%]" />
 
         <div
-          ref={imageRef}
+          ref={attachImageBox}
           // No transition here on purpose: the cover's poster unmounts in the same commit
           // that reveals this one, so any fade would show a gap between the two.
           className={cn("absolute inset-0 z-5 overflow-hidden", imageHidden && "opacity-0")}
@@ -102,6 +135,7 @@ export function StampCard({
             priority={priority}
             sizes="(min-width: 1024px) 40vw, 66vw"
             className="object-cover"
+            style={{ objectPosition: poster.focus }}
           />
         </div>
 
@@ -115,15 +149,15 @@ export function StampCard({
         )}
         <StampFrame className="absolute top-[-12%] left-[-12%] z-1 w-[124%]" />
 
-        {poster.href && active ? (
-          <a
-            href={poster.href}
-            target="_blank"
-            rel="noopener noreferrer"
+        {onOpen ? (
+          <button
+            type="button"
             onPointerDown={markPress}
-            onClick={cancelIfDragged}
-            aria-label={`${poster.words[0]} ${poster.words[1]}`.trim()}
-            className="absolute inset-0 z-10 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-dust"
+            onPointerUp={openIfTapped}
+            onPointerCancel={() => (press.current = null)}
+            onKeyDown={openOnKey}
+            aria-label={`Open ${`${poster.words[0]} ${poster.words[1]}`.trim()}`}
+            className="absolute inset-0 z-10 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-dust"
           />
         ) : null}
       </div>

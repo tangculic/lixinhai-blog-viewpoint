@@ -5,7 +5,10 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { cn } from "@/lib/utils";
 import { StampCard } from "@/components/sites/francobollimontilessini-d2eadb58/root-8a5edab2/StampCard";
 import { StampTrail } from "@/components/sites/francobollimontilessini-d2eadb58/root-8a5edab2/StampTrail";
-import { POSTERS } from "@/components/sites/francobollimontilessini-d2eadb58/root-8a5edab2/posters";
+import {
+  POSTERS,
+  type Poster,
+} from "@/components/sites/francobollimontilessini-d2eadb58/root-8a5edab2/posters";
 
 /**
  * The reel runs on a diagonal, not a horizontal line. Per step away from the centred
@@ -40,6 +43,15 @@ const LINE_SLOTS = range(LINE_RADIUS);
 /** Release momentum: slides carried per px/ms of flick along the axis. */
 const FLICK = 220;
 const SETTLE_MS = 700;
+/**
+ * Pointer travel, in px, before a press counts as a drag.
+ *
+ * Capture is deliberately withheld until this is crossed. A captured pointer retargets
+ * the `pointerup` and `click` that follow at the capturing element, which would take them
+ * away from the stamp sitting under the finger — so capturing on press, before we know
+ * whether this is a drag at all, silently breaks tapping a stamp open.
+ */
+const DRAG_SLOP = 10;
 const easeOutQuint = (t: number) => 1 - (1 - t) ** 5;
 
 export interface PosterCarouselProps {
@@ -48,8 +60,10 @@ export interface PosterCarouselProps {
   /** Hides the centred stamp's photo so the cover's poster can land in its place. */
   centerImageHidden?: boolean;
   /** Receives the centred stamp's photo box — the opening transition's landing target. */
-  centerImageRef?: React.Ref<HTMLDivElement>;
+  centerImageRef?: React.RefCallback<HTMLDivElement | null>;
   onCenterChange?: (index: number) => void;
+  /** Tapping the centred stamp opens it out. Its photo box is the flight's launch point. */
+  onOpenPoster?: (poster: Poster, from: DOMRect) => void;
   className?: string;
   style?: React.CSSProperties;
 }
@@ -73,6 +87,7 @@ export function PosterCarousel({
   centerImageHidden = false,
   centerImageRef,
   onCenterChange,
+  onOpenPoster,
   className,
   style,
 }: PosterCarouselProps) {
@@ -141,7 +156,17 @@ export function PosterCarousel({
   }, [paint]);
 
   // ---- drag ---------------------------------------------------------------
-  const gesture = useRef<{ x: number; y: number; t: number; v: number; from: number } | null>(null);
+  const gesture = useRef<{
+    x: number;
+    y: number;
+    /** Where the press landed, for the drag/tap decision. */
+    x0: number;
+    y0: number;
+    t: number;
+    v: number;
+    from: number;
+    captured: boolean;
+  } | null>(null);
   const settle = useRef(0);
   /** The footpath drawn between the stamp being left and the one being arrived at. */
   const [trail, setTrail] = useState<{ key: number; back: boolean; color: string } | null>(null);
@@ -170,18 +195,29 @@ export function PosterCarousel({
     gesture.current = {
       x: event.clientX,
       y: event.clientY,
+      x0: event.clientX,
+      y0: event.clientY,
       t: performance.now(),
       v: 0,
       from: Math.round(u.current),
+      captured: false,
     };
-    setDragging(true);
-    event.currentTarget.setPointerCapture(event.pointerId);
   };
 
   const onPointerMove = (event: React.PointerEvent) => {
     const g = gesture.current;
     const pitch = measureRef.current?.offsetWidth;
     if (!g || !pitch) return;
+    if (!g.captured) {
+      if (Math.hypot(event.clientX - g.x0, event.clientY - g.y0) <= DRAG_SLOP) return;
+      g.captured = true;
+      setDragging(true);
+      // Capture only keeps the drag alive past the window edge; a pointer that has
+      // already gone stale throws here, and losing that is no reason to lose the drag.
+      try {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      } catch {}
+    }
     const now = performance.now();
     // Only motion along the reel counts; the cross-axis component is ignored.
     const along = (event.clientX - g.x) * AXIS_X + (event.clientY - g.y) * AXIS_Y;
@@ -199,6 +235,7 @@ export function PosterCarousel({
     const g = gesture.current;
     if (!g) return;
     gesture.current = null;
+    if (!g.captured) return; // A tap. The stamp under it deals with the press itself.
     setDragging(false);
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
@@ -287,6 +324,7 @@ export function PosterCarousel({
         {STAMP_SLOTS.map((k) => {
           const slot = origin + k;
           const centered = k === 0;
+          const openable = centered && interactive && onOpenPoster;
           return (
             <div
               key={k}
@@ -301,6 +339,7 @@ export function PosterCarousel({
                 priority={wrap(slot) === 0}
                 imageRef={centered ? centerImageRef : undefined}
                 imageHidden={centered && centerImageHidden}
+                onOpen={openable ? (from) => onOpenPoster(posterAt(slot), from) : undefined}
                 className={cn(!centered && "pointer-events-none")}
               />
             </div>

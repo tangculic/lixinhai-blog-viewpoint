@@ -29,9 +29,9 @@ const cenzoFlare = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Monti Lessini in Francobolli",
+  title: "Travel Together in Penang & KL",
   description:
-    "I luoghi più iconici della Lessinia raccontati da dei francobolli — clone of francobollimontilessini.com",
+    "Let's travel together, watch the sunset at the beach, see World Heritage sites, and explore the city center.",
 };
 
 export default function RootLayout({

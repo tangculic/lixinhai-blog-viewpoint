@@ -3,10 +3,13 @@
 import Image from "next/image";
 
 import { cn } from "@/lib/utils";
-import { assetPath } from "@/lib/asset-path";
+import {
+  COVER_POSTER,
+  COVER_SRC,
+} from "@/components/sites/francobollimontilessini-d2eadb58/root-8a5edab2/posters";
 import { MountainPeaksIcon } from "@/components/sites/francobollimontilessini-d2eadb58/shared/icons";
 
-const HEADING_LINES = ["MONTI", "LESSINI"] as const;
+const HEADING_LINES = ["TRAVEL", "TOGETHER"] as const;
 
 // Precompute a global stagger index per letter (flattened across both lines) so the
 // entrance animation delay can be derived without mutating state during render.
@@ -51,11 +54,15 @@ export function HeroCover({ posterRef, onOpen, exiting = false }: HeroCoverProps
       {/* Poster layer */}
       <div ref={posterRef} className="absolute inset-0">
         <Image
-          src={assetPath("/sites/francobollimontilessini-d2eadb58/root-8a5edab2/poster-passo-malera.jpg")}
-          alt="Passo Malera — illustrated poster of green hills, a mountain house, and grazing cows under a blue sky"
+          src={COVER_SRC}
+          alt="Illustrated poster of a Malaysian beach at dusk — a pale sun over golden sand and a boat on calm water"
           fill
           priority
-          className="object-cover object-top"
+          className="object-cover"
+          // The same crop anchor the stamp uses. The flight animates one element's box
+          // from the cover's shape to the stamp's; if the two framed the photo
+          // differently, the moment of arrival would be a jump rather than a landing.
+          style={{ objectPosition: COVER_POSTER.focus }}
           sizes="100vw"
         />
       </div>
@@ -90,7 +97,7 @@ export function HeroCover({ posterRef, onOpen, exiting = false }: HeroCoverProps
                   } as React.CSSProperties
                 }
               >
-                ITALY
+                MALAYSIA
               </div>
               <div
                 className="font-neue-montreal font-bold text-[13px] lg:text-[23.2px] uppercase text-dust"
@@ -106,7 +113,9 @@ export function HeroCover({ posterRef, onOpen, exiting = false }: HeroCoverProps
             </div>
 
             {/* Heading */}
-            <h1 className="font-cenzo-flare font-black uppercase leading-[0.8] tracking-wider text-center text-[20vw] lg:text-[14vw] text-dust">
+            {/* "TOGETHER" is a letter longer than the source's widest line, so the type
+                scale steps down a notch to keep both lines inside the viewport. */}
+            <h1 className="font-cenzo-flare font-black uppercase leading-[0.8] tracking-wider text-center text-[15vw] lg:text-[11.5vw] text-dust">
               {HEADING_LETTERS.map((letters, lineIndex) => (
                 <div key={HEADING_LINES[lineIndex]} className="whitespace-nowrap flex justify-center">
                   {letters.map((char, i) => {
@@ -137,7 +146,7 @@ export function HeroCover({ posterRef, onOpen, exiting = false }: HeroCoverProps
                 } as React.CSSProperties
               }
             >
-              {"IN FRANCOBOLLI".split("").map((char, i) => (
+              {"IN PENANG&KL".split("").map((char, i) => (
                 <span key={i} className="font-neue-montreal text-[11.6px] uppercase text-dust">
                   {char === " " ? "  " : char}
                 </span>
@@ -152,8 +161,8 @@ export function HeroCover({ posterRef, onOpen, exiting = false }: HeroCoverProps
           style={{ animation: "ml-fade-in 500ms ease-out 450ms both" }}
         >
           <p className="font-neue-montreal font-bold text-[13.05px] uppercase leading-[1.5] text-dust">
-            I luoghi più iconici della Lessinia raccontati da dei francobolli, oggetti di per sé
-            liberi, reinterpretati attraverso la lente delle storie che ci appartengono.
+            LET&apos;S TRAVEL TOGETHER, WATCH THE SUNSET AT THE BEACH, SEE WORLD HERITAGE SITES,
+            AND EXPLORE THE CITY CENTER.
           </p>
         </div>
       </div>

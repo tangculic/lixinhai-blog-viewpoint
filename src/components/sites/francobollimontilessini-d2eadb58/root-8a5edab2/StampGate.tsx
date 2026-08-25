@@ -5,6 +5,7 @@ import { useCallback, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { HeroCover } from "@/components/sites/francobollimontilessini-d2eadb58/root-8a5edab2/HeroCover";
 import { PosterCarousel } from "@/components/sites/francobollimontilessini-d2eadb58/root-8a5edab2/PosterCarousel";
+import type { Poster } from "@/components/sites/francobollimontilessini-d2eadb58/root-8a5edab2/posters";
 
 /** Total length of the shrink. Long enough to read as a camera pulling back. */
 const OPEN_MS = 1100;
@@ -29,10 +30,18 @@ const prefersReducedMotion = () =>
  * so shrinking its box is what makes the image re-frame instead of squashing, which is
  * the whole character of the move.
  */
-export function StampGate() {
+export interface StampGateProps {
+  /** Forwarded to the carousel: tapping the centred stamp opens it out full-screen. */
+  onOpenPoster?: (poster: Poster, from: DOMRect) => void;
+}
+
+export function StampGate({ onOpenPoster }: StampGateProps) {
   const [phase, setPhase] = useState<Phase>("cover");
   const posterRef = useRef<HTMLDivElement>(null);
-  const targetRef = useRef<HTMLDivElement>(null);
+  const targetRef = useRef<HTMLDivElement | null>(null);
+  const attachTarget = useCallback((node: HTMLDivElement | null) => {
+    targetRef.current = node;
+  }, []);
 
   const open = useCallback(() => {
     if (phase !== "cover") return;
@@ -80,11 +89,18 @@ export function StampGate() {
       { duration: OPEN_MS, easing: EASE, fill: "forwards" },
     );
 
-    flight.finished
-      .catch(() => undefined)
-      .finally(() => {
-        setPhase("canvas");
-      });
+    // The cover is only dismissed once the flight reports in — and the whole page is
+    // behind that, so it cannot be the only thing we wait on. A tab throttled into the
+    // background can leave `finished` unsettled long past the duration, and the cover
+    // would sit there disabled. Whichever arrives first wins.
+    let settled = false;
+    const land = () => {
+      if (settled) return;
+      settled = true;
+      setPhase("canvas");
+    };
+    flight.finished.catch(() => undefined).finally(land);
+    window.setTimeout(land, OPEN_MS + 300);
   }, [phase]);
 
   const opening = phase === "opening";
@@ -94,10 +110,11 @@ export function StampGate() {
     <>
       <PosterCarousel
         interactive={phase === "canvas"}
-        centerImageRef={targetRef}
+        centerImageRef={attachTarget}
         // Until the flying poster has landed, the stamp underneath shows only its frame
         // and lettering — the photo arriving is the cover finishing its trip.
         centerImageHidden={showCover}
+        onOpenPoster={onOpenPoster}
         className={cn("z-0 ease-out", phase === "cover" && "opacity-0")}
         style={{ transition: `opacity ${Math.round(OPEN_MS * CANVAS_FADE)}ms ease-out` }}
       />
