@@ -94,7 +94,7 @@ export const POSTERS: readonly Poster[] = [
   {
     slug: "attraction-map",
     story:
-      "开启马来西亚双城之旅，感受多元文化的独特魅力。\n\n在槟城，穿梭于乔治市的百年街巷寻找世界遗产的印记，登上升旗山俯瞰全岛美景，或漫步USM理科大学感受静谧的学术氛围。傍晚，在峇都丁宜沙滩欣赏绝美落日，下榻香格里拉沙洋酒店享受热带奢华，再前往槟城奥特莱斯尽情购物。\n\n转场吉隆坡，仰望璀璨夺目的地标双子塔感受现代都市繁华，漫步独立广场触摸这座国家的历史脉搏。自然、人文与现代在此完美交融。",
+      "槟城 3 日行程\n\n10.3　槟城机场 → 乔治市民宿 George Town Kyash House 23\n\n10.4　乔治市民宿 → USM → 皇后湾广场 → 乔治市景点\n\n10.5　乔治市民宿 → 升旗山 → 乔治市民宿 → Gurney Plaza → 香格里拉金沙酒店\n\n10.6　香格里拉金沙酒店 → 槟城机场 / 皇后湾广场",
     image: "attraction-map",
     words: ["Map", "Attraction"],
     place: "Penang & Kuala Lumpur, Malaysia",

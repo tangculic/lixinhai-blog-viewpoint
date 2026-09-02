@@ -40,9 +40,15 @@ const prefersReducedMotion = () =>
 export interface StampGateProps {
   /** Forwarded to the carousel: tapping the centred stamp opens it out full-screen. */
   onOpenPoster?: (poster: Poster, from: DOMRect) => void;
+  /**
+   * Put the cover away without playing it, for an arrival at `#/<slug>`: a poster page is
+   * already opening over the top, and the cover would only be a flash of front door behind
+   * it.
+   */
+  skipCover?: boolean;
 }
 
-export function StampGate({ onOpenPoster }: StampGateProps) {
+export function StampGate({ onOpenPoster, skipCover = false }: StampGateProps) {
   const [phase, setPhase] = useState<Phase>("cover");
   const posterRef = useRef<HTMLDivElement>(null);
   const targetRef = useRef<HTMLDivElement | null>(null);
@@ -123,19 +129,23 @@ export function StampGate({ onOpenPoster }: StampGateProps) {
     return () => cancelAnimationFrame(handle);
   }, [open]);
 
-  const opening = phase === "opening";
-  const showCover = phase !== "canvas";
+  // `skipCover` is folded in here rather than pushed into `phase`, so it stays a plain
+  // reading of the props: an arrival at `#/<slug>` lands on the canvas without the cover
+  // ever having been a state the component passed through.
+  const settled = phase === "canvas" || skipCover;
+  const opening = phase === "opening" && !settled;
+  const showCover = !settled;
 
   return (
     <>
       <PosterCarousel
-        interactive={phase === "canvas"}
+        interactive={settled}
         centerImageRef={attachTarget}
         // Until the flying poster has landed, the stamp underneath shows only its frame
         // and lettering — the photo arriving is the cover finishing its trip.
         centerImageHidden={showCover}
         onOpenPoster={onOpenPoster}
-        className={cn("z-0 ease-out", phase === "cover" && "opacity-0")}
+        className={cn("z-0 ease-out", showCover && phase === "cover" && "opacity-0")}
         style={{ transition: `opacity ${Math.round(OPEN_MS * CANVAS_FADE)}ms ease-out` }}
       />
 

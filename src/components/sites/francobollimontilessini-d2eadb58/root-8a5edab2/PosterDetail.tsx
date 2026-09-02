@@ -19,15 +19,15 @@ import {
 } from "@/components/sites/francobollimontilessini-d2eadb58/root-8a5edab2/posters";
 
 /**
- * Leaflet reaches for `window` while it initialises, so the map cannot be part of a
- * statically pre-rendered page — and only one poster page wants it, so the rest should
- * not carry its weight either.
+ * Leaflet reaches for `window` while it initialises, so the itinerary — four maps of it —
+ * cannot be part of a statically pre-rendered page. Only one poster page wants it, so the
+ * rest should not carry its weight either.
  */
-const PenangMap = dynamic(
+const ItineraryPanel = dynamic(
   () =>
-    import("@/components/sites/francobollimontilessini-d2eadb58/root-8a5edab2/PenangMap").then(
-      (m) => m.PenangMap,
-    ),
+    import(
+      "@/components/sites/francobollimontilessini-d2eadb58/root-8a5edab2/ItineraryPanel"
+    ).then((m) => m.ItineraryPanel),
   { ssr: false },
 );
 
@@ -122,6 +122,8 @@ export function PosterDetail({ poster, from, onClose, onNavigate }: PosterDetail
   const next = nextPoster(poster);
   const slides = galleryFor(poster);
   const label = `${poster.words[0]} ${poster.words[1]}`.trim();
+  /** The one page that opens onto the trip itself rather than onto photographs. */
+  const isItinerary = poster.panel === "map";
 
   /** A pin on the map jumping to the stamp for that place, where one exists. */
   const openBySlug = useCallback(
@@ -308,7 +310,16 @@ export function PosterDetail({ poster, from, onClose, onNavigate }: PosterDetail
       <section className="mx-auto max-w-[900px] px-6 pt-16 pb-4 md:px-10 md:pt-24">
         <p className={labelClass}>{poster.coords}</p>
         <div
-          className="mt-8 space-y-4 font-neue-montreal text-[clamp(21px,4.6vw,36px)] leading-[1.16] font-bold text-dust uppercase"
+          className={cn(
+            "mt-8 font-neue-montreal font-bold text-dust",
+            // The other pages carry two or three sentences of prose, and the display size
+            // is the point of them. This one carries a timetable — four dated lines of
+            // place names and arrows — which at that size wraps mid-route and stops
+            // reading as a list at all.
+            isItinerary
+              ? "space-y-3 text-[clamp(15px,3.4vw,22px)] leading-[1.5]"
+              : "space-y-4 text-[clamp(21px,4.6vw,36px)] leading-[1.16] uppercase",
+          )}
           style={{ textWrap: "pretty" }}
         >
           {poster.story.split("\n\n").map((paragraph, i) => (
@@ -318,19 +329,22 @@ export function PosterDetail({ poster, from, onClose, onNavigate }: PosterDetail
       </section>
 
       {/* ---- the gallery ---- */}
-      <section aria-label={`${label} photographs`} className="pt-12 md:pt-16">
-        {/* The two outward links belong to a place you might go and look up. The map page
-            is the collection's own index — it is about all of them at once, has no single
-            listing or pin to point at, and drew both buttons dimmed and inert. */}
-        {poster.panel !== "map" ? (
+      <section
+        aria-label={isItinerary ? "槟城行程" : `${label} photographs`}
+        className="pt-12 md:pt-16"
+      >
+        {/* The two outward links belong to a place you might go and look up. The itinerary
+            page is about all of them at once and has no single listing to point at; its own
+            address, `#/attraction-map`, is in the address bar for the sharing. */}
+        {isItinerary ? null : (
           <div className="mb-12 flex flex-wrap items-center justify-center gap-4 px-6 md:mb-16">
             <GalleryLink href={poster.links?.ctrip}>携程</GalleryLink>
             <GalleryLink href={poster.links?.map}>地图</GalleryLink>
           </div>
-        ) : null}
+        )}
 
-        {poster.panel === "map" ? (
-          <PenangMap onOpenPoster={openBySlug} />
+        {isItinerary ? (
+          <ItineraryPanel onOpenPoster={openBySlug} />
         ) : (
           /* The gap has to clear two die-cut borders, each overhanging its card by 12%, or
              neighbouring perforations interlock.
